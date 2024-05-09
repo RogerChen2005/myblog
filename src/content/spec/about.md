@@ -1,9 +1,21 @@
 # About
-This is the demo site for [Fuwari](https://github.com/saicaca/fuwari).
 
-::github{repo="saicaca/fuwari"}
+::github{repo="rogerchen2005/myblog"}
 
-> ### Sources of images used in this site
-> - [Unsplash](https://unsplash.com/)
-> - [星と少女](https://www.pixiv.net/artworks/108916539) by [Stella](https://www.pixiv.net/users/93273965)
-> - [Rabbit - v1.4 Showcase](https://civitai.com/posts/586908) by [Rabbit_YourMajesty](https://civitai.com/user/Rabbit_YourMajesty)
+## 新的开始
+
+之前老博客的源码丢了，新的博客就从这里开始吧
+
+## 博客内容
+
+偶尔会写一些正经的技术类文章，或是分享一些技术和资源
+
+## 个人简介
+
+Hi, there👋
+
+我是 cast1e, 一名浙江大学的本科生
+
+爱好吉他、Web 和羽毛球
+
+很高兴你能查看我的博客
