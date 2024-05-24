@@ -43,6 +43,15 @@ const jsonLd = {
     // TODO include cover image here
 }
 
+// onMount(()=>{
+//     Artalk.init({
+//     el:      '#Comments',
+//     site:    'rooger 的博客',
+//     server:  'https://app.cast1e.top/comments/',
+//     pageKey:  window.location.pathname
+// })
+// })
+
 ---
 <MainGridLayout banner={entry.data.image} title={entry.data.title} description={entry.data.description}>
     <script slot="head" type="application/ld+json" set:html={JSON.stringify(jsonLd)}></script>
@@ -103,7 +112,17 @@ const jsonLd = {
             </Markdown>
 
             {licenseConfig.enable && <License title={entry.data.title} slug={entry.slug} pubDate={entry.data.published} class="mb-6 rounded-xl license-container onload-animation"></License>}
-
+            <div id="Comments"></div>
+            <script>
+                import 'artalk/dist/Artalk.css'
+                import Artalk from 'artalk'
+                Artalk.init({
+                    el:      document.getElementById('Comments'),
+                    site:    'rooger 的博客',
+                    server:  'https://app.cast1e.top/comments/',
+                    pageKey:  window.location.pathname
+                })
+            </script>
         </div>
     </div>
 
