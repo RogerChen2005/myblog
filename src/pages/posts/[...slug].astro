@@ -116,11 +116,13 @@ const jsonLd = {
             <script>
                 import 'artalk/dist/Artalk.css'
                 import Artalk from 'artalk'
+                const isDarkTheme = window.matchMedia("(prefers-color-scheme: dark)");
                 Artalk.init({
                     el:      document.getElementById('Comments'),
                     site:    'rooger 的博客',
                     server:  'https://app.cast1e.top/comments/',
-                    pageKey:  window.location.pathname
+                    pageKey:  window.location.pathname,
+                    darkMode: isDarkTheme.matches
                 })
             </script>
         </div>
