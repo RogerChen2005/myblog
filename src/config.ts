@@ -80,3 +80,12 @@ export const licenseConfig: LicenseConfig = {
   name: 'CC BY-NC-SA 4.0',
   url: 'https://creativecommons.org/licenses/by-nc-sa/4.0/',
 }
+
+export const linkConfig: LinkConfig = {
+  links:[
+    {
+      name: '末荼の大学生活',
+      url: 'https://chatter-barber-020.notion.site/40075ca669a9460d9c915b1e564c83c2?v=ea79d5524f6546eba94e3da5efb93f1e',
+    },
+  ]
+}

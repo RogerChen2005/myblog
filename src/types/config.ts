@@ -54,3 +54,10 @@ export type LicenseConfig = {
   name: string
   url: string
 }
+
+export type LinkConfig = {
+  links: {
+    name: string
+    url: string
+  }[]
+}

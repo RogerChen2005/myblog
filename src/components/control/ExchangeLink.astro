@@ -1,0 +1,39 @@
+---
+import {Icon} from "astro-icon/components";
+interface Props {
+    badge?: string
+    url?: string
+    label?: string
+}
+const { url, name } = Astro.props
+---
+<a href={url} aria-label={name} target="_blank">
+    <button
+        class:list={`
+            w-full
+            h-10
+            rounded-lg
+            bg-none
+            hover:bg-[var(--btn-plain-bg-hover)]
+            active:bg-[var(--btn-plain-bg-active)]
+            transition-all
+            pl-2
+            hover:pl-3
+            
+            text-neutral-700
+            hover:text-[var(--primary)]
+            dark:text-neutral-300
+            dark:hover:text-[var(--primary)]
+        `
+        }
+    >
+        <div class="flex items-center justify-between relative mr-2">
+            <div class="overflow-hidden text-left whitespace-nowrap overflow-ellipsis  ">
+                <slot></slot>
+            </div>
+            <Icon name="fa6-solid:arrow-up-right-from-square"
+                  class="transition text-black/25 dark:text-white/25 -translate-x-1" size="12">
+            </Icon>
+        </div>
+    </button>
+</a>
