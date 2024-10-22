@@ -1,10 +1,10 @@
 ---
 title: Windows11 24H2 桌面切换机制的研究与动态壁纸的实现
-published: 2024-05-24
+published: 2024-10-22
 description: 'Windows11 24H2 更新了平滑的桌面切换，动态壁纸的实现也与此前不同'
 image: ''
-tags: ['算法']
-category: '技术分享'
+tags: ['Windows']
+category: '技术分析'
 draft: false
 ---
 # 前言
@@ -37,7 +37,7 @@ Windows `Program Manager "Progman"` 会分裂为三个部分 - 两个 `WorkerW` 
 
 将鼠标移到一个桌面图标上，我们发现桌面好像被搂了一个洞
 
-![img]()
+![img](./res/004.gif "直接置入")
 
 实际上，桌面图标已经透明了，只不过 Windows 在桌面切换时对桌面创建了一个快照覆盖在图标层来，来实现平滑过渡，如果你用四指在触控板上滑动时，你就能看到这个效果。
 
@@ -83,3 +83,7 @@ if (hDefView!=NULL) {
 # 后记
 
 在 24H2 之前实现动态壁纸时仍需使用原先的方法，不过据我搜索，在 23H2 就已经出现过了这种桌面切换方式（可能是某个需要 ViveTools 启用的功能或是 Canary 频道启用的功能），新的切换方式对于动态桌面的代码做了极大的简化。
+
+我的动态壁纸项目
+
+::github{repo="rogerchen2005/wallitor"}
