@@ -3,6 +3,7 @@ import type {
   NavBarConfig,
   ProfileConfig,
   SiteConfig,
+  LinkConfig
 } from './types/config'
 import { LinkPreset } from './types/config'
 
