@@ -17,7 +17,7 @@ export type SiteConfig = {
 }
 
 export type Favicon = {
-  src: string,
+  src: string
   theme?: 'light' | 'dark'
   sizes?: string
 }
@@ -60,4 +60,9 @@ export type LinkConfig = {
     name: string
     url: string
   }[]
+}
+
+export type CommentConfig = {
+  serverURL: string
+  emoji: string[]
 }

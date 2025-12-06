@@ -1,0 +1,17 @@
+---
+import type { CollectionEntry } from 'astro:content'
+import { commentConfig } from '@/config'
+import Waline from './Waline.astro'
+interface Props {
+  post: CollectionEntry<'posts'>
+}
+
+const { slug } = Astro.props.post
+
+const path = `/posts/${slug}`
+---
+{ 
+    <div class="card-base p-6 mb-5">
+      <Waline path={path}/>
+    </div>
+}
