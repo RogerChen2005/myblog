@@ -1,10 +1,10 @@
 ---
 title: Windows11 24H2 桌面切换机制的研究与动态壁纸的实现
 published: 2024-10-22
-description: 'Windows11 24H2 更新了平滑的桌面切换，动态壁纸的实现也与此前不同'
+description: Windows11 24H2 更新了平滑的桌面切换，动态壁纸的实现也与此前不同
 image: ''
 tags: ['Windows']
-category: '技术分析'
+category: 技术分享
 draft: false
 ---
 # 前言

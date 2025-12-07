@@ -2,7 +2,7 @@
 title: 说说 Markdown
 published: 2024-05-11
 description: '基础 markdown 教程'
-tags: ['web']
+tags: ['Web']
 category: '技术分享'
 draft: false
 ---

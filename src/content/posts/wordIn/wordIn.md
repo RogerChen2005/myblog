@@ -1,10 +1,10 @@
 ---
 title: 聊聊我的项目 - wordIn
 published: 2024-06-22
-description: 'wordIn 是我大一突发奇想写的在线单词默写器，我想与大家分享下我的开发经历'
+description: wordIn 是我大一突发奇想写的在线单词默写器，我想与大家分享下我的开发经历
 image: './img/header.jpg'
 tags: ['杂谈']
-category: '技术分析'
+category: 技术分享
 draft: false
 ---
 

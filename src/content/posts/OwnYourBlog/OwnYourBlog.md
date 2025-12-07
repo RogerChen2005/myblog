@@ -1,9 +1,9 @@
 ---
 title: 拥有你的个人博客
 published: 2024-05-10
-description: '使用 Hexo 构建你的博客'
-tags: [‘web’]
-category: '技术分享'
+description: 使用 Hexo 构建你的博客
+tags: ['Web']
+category: 技术分享
 draft: false
 ---
 

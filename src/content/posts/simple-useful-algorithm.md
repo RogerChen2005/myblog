@@ -1,7 +1,7 @@
 ---
 title: 简单实用的算法
 published: 2024-05-24
-description: '记录一些有意思的算法'
+description: 记录一些有意思的算法
 image: ''
 tags: ['算法']
 category: '技术分享'

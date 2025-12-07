@@ -4,7 +4,7 @@ published: 2024-05-09
 description: 第一篇文章
 image: ./cover.jpg
 tags: []
-category: ""
+category: Misc
 draft: false
 ---
 
