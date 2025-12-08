@@ -90,6 +90,10 @@ export const linkConfig: LinkConfig = {
       name: '末荼の大学生活',
       url: 'https://chatter-barber-020.notion.site/40075ca669a9460d9c915b1e564c83c2?v=ea79d5524f6546eba94e3da5efb93f1e',
     },
+    {
+      name: '芙芙的小蛋糕',
+      url: 'https://wht222.github.io/myblog',
+    },
   ],
 }
 
