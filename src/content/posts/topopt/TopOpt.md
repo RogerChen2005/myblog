@@ -1,6 +1,6 @@
 ---
 title: 拓扑优化：复现《A 99 line topology optimization code written in Matlab》
-published: 2024-05-11
+published: 2025-12-11
 description: 使用Python编写复现了O. Sigmund的著名论文，并且进行了详细的理论推导
 image: ""
 tags:
@@ -18,7 +18,10 @@ draft: false
 
 我们可以写出线性规划的目标和约束
 
-$$\left. \begin{array}{rl} \min\limits_{\mathbf{x}} : & c(\mathbf{x}) = \mathbf{U}^T \mathbf{K} \mathbf{U} = \displaystyle\sum_{e=1}^{N} (x_e)^p \mathbf{u}_e^T \mathbf{k}_0 \mathbf{u}_e \\[18pt] \text{subject to} : & \dfrac{V(\mathbf{x})}{V_0} = f \\[18pt] : & \mathbf{K}\mathbf{U} = \mathbf{F} \\[15pt] : & \mathbf{0} < \mathbf{x}_{\text{min}} \leq \mathbf{x} \leq \mathbf{1} \end{array} \right\},$$
+$$
+\left. \begin{array}{rl} \min\limits_{\mathbf{x}} : & c(\mathbf{x}) = \mathbf{U}^T \mathbf{K} \mathbf{U} = \displaystyle\sum_{e=1}^{N} (x_e)^p \mathbf{u}_e^T \mathbf{k}_0 \mathbf{u}_e \\[18pt] \text{subject to} : & \dfrac{V(\mathbf{x})}{V_0} = f \\[18pt] : & \mathbf{K}\mathbf{U} = \mathbf{F} \\[15pt] : & \mathbf{0} < \mathbf{x}_{\text{min}} \leq \mathbf{x} \leq \mathbf{1} \end{array} \right\}
+$$
+
 其中，$\mathbf{U}$ 是全局位移矩阵，$\mathbf{K}$ 是全局刚度矩阵，$\mathbf{x}$ 是材料密度，是我们需要优化的变量，$c(\mathbf{x})$ 是我们的优化目标。
 
 约束条件即：
@@ -28,47 +31,67 @@ $$\left. \begin{array}{rl} \min\limits_{\mathbf{x}} : & c(\mathbf{x}) = \mathbf{
 
 求解过程是一个迭代的过程，利用OC方法不断更新 $\mathbf{x}$，直到每次的更新量小于一定阈值，求解的最终结果如下图所示：
 
-![](attachments/topology_optimization_result.png)
+![](./attachments/topology_optimization_result.png)
 
 ### 第一步：求解单元刚度矩阵
 
 对于我们的问题，网格已经天然地划分好了，如上图所示，我们求解的空间即使一个二维的点阵，每个填充的节点即是一个正方形的主控单元，如下图所示：
 
-![](attachments/Pasted%20image%2020251210090720.png)
+![](./attachments/solve_ke.png)
 
 对于这个单元，四个节点的形函数应该满足：
-$$\begin{cases}
+
+$$
+\begin{cases}
 N_{i}(\xi_{i},\eta_{i})=1,\quad N_{j \ne i}(\xi_{i},\eta_{i})=0 \\
-\sum\limits_{i=1}^{4} N_{i}(\xi,\eta) \equiv 1
-\end{cases}$$
+\sum_{i=1}^{4} N_{i}(\xi,\eta) \equiv 1
+\end{cases}
+$$
+
 可以写出：
-$$N_1 = \frac{1}{4}(1-\xi)(1-\eta)$$
-$$N_2 = \frac{1}{4}(1+\xi)(1-\eta)$$
-$$N_3 = \frac{1}{4}(1+\xi)(1+\eta)$$
-$$N_4 = \frac{1}{4}(1-\xi)(1+\eta)$$
+$$
+N_1 = \frac{1}{4}(1-\xi)(1-\eta)
+$$
+$$
+N_2 = \frac{1}{4}(1+\xi)(1-\eta)
+$$
+$$
+N_3 = \frac{1}{4}(1+\xi)(1+\eta)
+$$
+$$
+N_4 = \frac{1}{4}(1-\xi)(1+\eta)
+$$
 接着，我们需要建立应变-位移矩阵，对于平面问题，应变 $\boldsymbol{\varepsilon} = [\varepsilon_x, \varepsilon_y, \gamma_{xy}]^T$。
 
 $\mathbf{B}$ 矩阵由形函数的偏导数组成（注意不是对 $\xi,\eta$ 偏导）：
 
-$$\mathbf{B}_i = \begin{bmatrix} \frac{\partial N_i}{\partial x} & 0 \\ 0 & \frac{\partial N_i}{\partial y} \\ \frac{\partial N_i}{\partial y} & \frac{\partial N_i}{\partial x} \end{bmatrix}$$
+$$
+\mathbf{B}_i = \begin{bmatrix} \frac{\partial N_i}{\partial x} & 0 \\ 0 & \frac{\partial N_i}{\partial y} \\ \frac{\partial N_i}{\partial y} & \frac{\partial N_i}{\partial x} \end{bmatrix}
+$$
 与此同时，我们还需要 $x,y$ 到 $\xi,\eta$ 的映射（雅可比矩阵）
 
-$$\mathbf{J}=\begin{bmatrix}
+$$
+\mathbf{J}=\begin{bmatrix}
 \frac{\partial x}{\partial \xi} & \frac{\partial x}{\partial \eta} \\
 \frac{\partial y}{\partial \xi} & \frac{\partial y}{\partial \eta} 
 \end{bmatrix}=\begin{bmatrix}
 0.5 & 0 \\
 0 & 0.5
-\end{bmatrix}$$
+\end{bmatrix}
+$$
 
 对于 **平面应力 (Plane Stress)** 问题，材料矩阵 $\mathbf{D}$ 为：
 
-$$\mathbf{D} = \frac{E}{1-\nu^2} \begin{bmatrix} 1 & \nu & 0 \\ \nu & 1 & 0 \\ 0 & 0 & \frac{1-\nu}{2} \end{bmatrix}$$
+$$
+\mathbf{D} = \frac{E}{1-\nu^2} \begin{bmatrix} 1 & \nu & 0 \\ \nu & 1 & 0 \\ 0 & 0 & \frac{1-\nu}{2} \end{bmatrix}
+$$
 其中 $E$ 是杨氏模量，$\nu$ 是泊松比。
 
 最后，单元刚度矩阵 $\mathbf{K}_e$ 的定义是：
 
-$$\mathbf{K}_e = \int_{-1}^{1} \int_{-1}^{1} \mathbf{B}^T \mathbf{D} \mathbf{B} \cdot t \cdot \det(\mathbf{J}) \, d\xi d\eta$$
+$$
+\mathbf{K}_e = \int_{-1}^{1} \int_{-1}^{1} \mathbf{B}^T \mathbf{D} \mathbf{B} \cdot t \cdot \det(\mathbf{J}) \, d\xi d\eta
+$$
 这里，我们使用 MATLAB 进行计算
 
 ```matlab
@@ -101,7 +124,7 @@ disp(simplify(res));
 
 原论文中已经给出了KE的解析表达式
 
-![](attachments/Pasted%20image%2020251210100358.png)
+![](./attachments/origin_ke.png)
 
 上述代码的计算结果与原论文代码的结果一致，我们转为 Python 函数：
 
@@ -133,18 +156,20 @@ def get_element_stiffness_matrix(E=1.0, nu=0.3):
 
 对于每一个节点，它可能被多个单元共用，所以我们需要建立局部自由度与全局自由度之间的关系，如下图所示的一个 $2 \times 2$ 单元（$\text{nely}=2,\text{nelx}=2$）所示：
 
-![](attachments/Pasted%20image%2020251210104402.png)
+![](./attachments/simple_grid.png)
 
 对于每一个全局节点，其有两个自由度($x,y$)，我们假设节点 $i$ 的 $x$ 自由度编号为 $2\times i$ ，$y$自由度为 $2\times i+1$。
 
 对于第 $l$ 行 第 $k$ 列（从左下到右上，从0开始编号）的单元，其有四个局部节点，我们易知其相对于全局节点的关系：
 
-$$\begin{cases}
+$$
+\begin{cases}
 \text{GLOB}(1) = k \times (\text{nely}+1)+l \\
 \text{GLOB}(2) = k \times (\text{nely}+1)+l+1 \\
 \text{GLOB}(3) = (k+1) \times (\text{nely}+1)+l \\
 \text{GLOB}(4) = (k+1)  \times (\text{nely}+1)+l
-\end{cases}$$
+\end{cases}
+$$
 随后我们就可以得到每个局部单元的全局自由度编号了，写为 Python 函数
 
 ```python
@@ -209,9 +234,13 @@ def assemble_global_stiffness(x, penal, ke, iK, jK, ndof):
 ## 第三步：有限元分析
 
 我们现在已经知道了 $\mathbf{K}$，载荷 $\mathbf{F}$ 和约束应该在求解前定义，根据
-$$\mathbf{K}\cdot \mathbf{U}=\mathbf{F}$$
+$$
+\mathbf{K}\cdot \mathbf{U}=\mathbf{F}
+$$
 得到全局位移矩阵为：
-$$\mathbf{U}=\mathbf{K}^{-1}\mathbf{F}$$
+$$
+\mathbf{U}=\mathbf{K}^{-1}\mathbf{F}
+$$
 ```python
 def solve_equilibrium(K, force_vector, fixed_dofs):
     ndof = K.shape[0]
@@ -226,6 +255,8 @@ def solve_equilibrium(K, force_vector, fixed_dofs):
 ```
 
 对于固定支撑约束，我们即认为这些自由度被消除了，即先剔除被约束的自由度，再求解即可
+
+
 
 ## 未完待续
 
