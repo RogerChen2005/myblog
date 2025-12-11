@@ -10,6 +10,7 @@
     "astro": "astro",
     "new-post": "node scripts/new-post.js",
     "del-post": "node scripts/del-post.js",
+    "fix-images": "node scripts/fix-image-paths.js",
     "format": "biome format --write ./src",
     "lint": "biome check --apply ./src"
   },

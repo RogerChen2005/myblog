@@ -29,7 +29,32 @@ $$
 2. $\mathbf{K}\mathbf{U} = \mathbf{F}$ 是有限元分析的步骤，通过这个方程我们可以用全局力 $\mathbf{F}$ 解出全局位移 $\mathbf{U}$
 3. 对于最后一个条件，就是材料在每个区域的填充率超过1（全部填充），也不能过小
 
-求解过程是一个迭代的过程，利用OC方法不断更新 $\mathbf{x}$，直到每次的更新量小于一定阈值，求解的最终结果如下图所示：
+对于上述约束系统建立拉格朗日方程
+
+$$
+L(\mathbf{x},\lambda)= c(\mathbf{x})-\lambda(V(\mathbf{x})-V_{0}\cdot f)
+$$
+我们可以知道拉格朗日方程的极值条件和原约束系统的相同，于是我们可以知道对于线性规划的解，有：
+
+$$
+\frac{\partial c}{\partial x_e} + \lambda \frac{\partial V}{\partial x_e} = 0
+$$
+我们这里定义启发式的更新因子 $B_e$：
+
+$$B_e = \frac{- \frac{\partial c}{\partial x_e}}{\lambda \frac{\partial V}{\partial x_e}}$$
+
+可知在最优解处 $B_e = 1$，因为每个单元对于体积的贡献度相同，所以我们令 $\frac{\partial V}{\partial x_e}=1$，$\frac{\partial c}{\partial x_e}$ 即优化目标的梯度，为：
+
+$$
+\frac{\partial c}{\partial x_e}=p(x_{e})^p\,\mathbf{u}_e^T \mathbf{k}_0 \mathbf{u}_e
+$$
+我们采用OC方法迭代求解 $\mathbf{x}$，更新公式如下：
+
+$$
+x_e^{\text{new}}= \begin{cases} \max(x_{\min}, x_e - m) & \text{if } x_e B_e^\eta \le \max(x_{\min}, x_e - m) \\ \min(1, x_e + m) & \text{if } x_e B_e^\eta \ge \min(1, x_e + m) \\ x_e B_e^\eta & \text{otherwise} \end{cases}
+$$
+
+若每次的更新量小于阈值，求解结束，最终结果如下图所示：
 
 ![](./attachments/topology_optimization_result.png)
 
@@ -256,7 +281,132 @@ def solve_equilibrium(K, force_vector, fixed_dofs):
 
 对于固定支撑约束，我们即认为这些自由度被消除了，即先剔除被约束的自由度，再求解即可
 
+## 第四步：灵敏度计算
 
+有上述推导可以知道，灵敏度即对于优化目标的梯度，计算公式为
+$$
+c(\mathbf{x}) = \displaystyle\sum_{e=1}^{N} (x_e)^p \mathbf{u}_e^T \mathbf{k}_0 \mathbf{u}_e
+$$
+$$
+\frac{\partial c}{\partial x_e}=p(x_{e})^p\,\mathbf{u}_e^T \mathbf{k}_0 \mathbf{u}_e
+$$
+据此编写代码：
 
-## 未完待续
+```python
+def calculate_sensitivity(x, U, ke, penal, edofMat):
+    Ue = U[edofMat] # (nelx*nely, 8)
 
+    ce = np.sum((Ue @ ke) * Ue, axis=1)
+    
+    obj = np.sum((x ** penal) * ce)
+    dc = -penal * (x ** (penal - 1)) * ce
+    
+    return obj, dc
+```
+
+这里 `obj` 是所有的目标函数（用于观察优化过程），`dc` 是所求的灵敏度。
+
+### 灵敏度过滤
+
+为了更快得收敛，原论文作者提出了一种灵敏度的过滤方法，作者认为：
+
+**一个单元的灵敏度不仅取决于自身，还受到其邻域内单元的影响**
+
+其过滤公式为：
+
+$$
+\widehat{\dfrac{\partial c}{\partial x_e}} = \dfrac{1}{x_e \displaystyle\sum_{f=1}^{N} \hat{H}_f} \displaystyle\sum_{f=1}^{N} \hat{H}_f \, x_f \, \dfrac{\partial c}{\partial x_f}.
+$$
+其中 $\hat{H}_{f}$ 是灵敏度过滤系数，其定义为：
+
+$$
+\hat{H}_{f}= r_{\min} −\text{dist}(e, f),
+$$
+
+式中 $r_{\min}$ 是过滤半径，从 $e$ 点开始画一个过滤半径的圆，对于圆内的所有顶点，计算 $e$ 与 $f$ 的灵敏度系数，进而过滤。
+
+代码为：
+
+```python
+def check_sensitivity_filter(x, dc, H, Hs):
+    x = np.maximum(x, 0.001)
+    numerator = H @ (x * dc)
+    numerator = np.asarray(numerator).flatten()
+    denominator = np.multiply(np.asarray(Hs).flatten(), x)
+    dc_new = numerator / denominator
+    return dc_new
+```
+
+### 灵敏度过滤系数计算
+
+上述公式还需要计算灵敏度过滤系数，因为 $H$ 只和初始的单元距离有关，所以我们可以在程序的开始即完成计算，迭代时直接使用即可：
+
+```python
+def prepare_filter(nelx, nely, rmin):
+    nfilter = int(nelx * nely * ((2 * (np.ceil(rmin) - 1) + 1)**2))
+    iH = np.zeros(nfilter)
+    jH = np.zeros(nfilter)
+    sH = np.zeros(nfilter)
+    
+    k = 0
+    for i1 in range(nelx):
+        for j1 in range(nely):
+            e1 = i1 * nely + j1
+            imin = max(i1 - (np.ceil(rmin) - 1), 0)
+            imax = min(i1 + (np.ceil(rmin) - 1) + 1, nelx)
+            jmin = max(j1 - (np.ceil(rmin) - 1), 0)
+            jmax = min(j1 + (np.ceil(rmin) - 1) + 1, nely)
+            
+            for i2 in range(int(imin), int(imax)):
+                for j2 in range(int(jmin), int(jmax)):
+                    e2 = i2 * nely + j2
+                    dist = np.sqrt((i1 - i2)**2 + (j1 - j2)**2)
+                    iH[k] = e1
+                    jH[k] = e2
+                    sH[k] = max(0, rmin - dist)
+                    k += 1
+                    
+    H = coo_matrix((sH[:k], (iH[:k], jH[:k])), shape=(nelx*nely, nelx*nely)).tocsr()
+    Hs = H.sum(1)
+    return H, Hs
+```
+
+上述代码对于每一个节点，找到与其距离小于 $r_{min}$ 的所有点（过滤半径实际上编程时需要自己指定），计算该点的灵敏度过滤系数。
+
+## 第五步：更新设计变量
+
+$$
+x_e^{\text{new}} = \begin{cases} \max(x_{\min}, x_e - m) & \text{if } x_e B_e^\eta \le \max(x_{\min}, x_e - m) \\ \min(1, x_e + m) & \text{if } x_e B_e^\eta \ge \min(1, x_e + m) \\ x_e B_e^\eta & \text{otherwise} \end{cases}
+$$
+
+对于更新因子 $B_e$：
+
+$$B_e = \frac{- \frac{\partial c}{\partial x_e}}{\lambda \frac{\partial V}{\partial x_e}}$$
+通过上述计算，我们还需知道 $\lambda$ 才可以更新设计变量，这里我们需要利用体积约束，因为更新之后的 $x^{\text{new}}$ 的体积是一个常值：
+
+$$
+\sum x_e^{\text{new}} = f \times N
+$$
+所以我们可以通过这个找到 $\lambda$ ，因为反求比较麻烦，又因为 $B_{e}\propto\lambda^{-1}$ 所以我们可以取一个左值 $\lambda_{1}$ 和一个右值 $\lambda_{2}$，使得左值足够小，右值足够大，再通过二分算法查找 $\lambda$
+
+```python
+def optimality_criteria_update(x, dc, volfrac):
+    l1 = 0
+    l2 = 1e9
+    move = 0.2
+    x = np.asarray(x).flatten()
+    dc = np.asarray(dc).flatten()
+    
+    while (l2 - l1) / (l1 + l2) > 1e-3:
+        lmid = 0.5 * (l2 + l1)
+        x_new = np.maximum(0.001, np.maximum(x - move, np.minimum(1.0, np.minimum(x + move, x * np.sqrt(-dc / lmid)))))
+        
+        if np.mean(x_new) - volfrac > 0:
+            l1 = lmid
+        else:
+            l2 = lmid
+            
+    return x_new
+```
+
+至此，我们已经完成了一次迭代的所有步骤。
