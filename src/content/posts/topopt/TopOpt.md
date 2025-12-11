@@ -410,3 +410,59 @@ def optimality_criteria_update(x, dc, volfrac):
 ```
 
 至此，我们已经完成了一次迭代的所有步骤。
+
+## 求解
+
+### 定义力和约束
+
+```python
+ndof = 2 * (nelx + 1) * (nely + 1)
+    
+# Force
+load_node = nelx * (nely + 1) + nely
+force_vector = np.zeros(ndof)
+force_vector[2 * load_node + 1] = -1.0
+    
+# Fixed DOFs
+fixed_nodes = np.arange(nely + 1)
+fixed_dofs = np.concatenate([2 * fixed_nodes, 2 * fixed_nodes + 1])
+```
+
+上述代码对右下角的单元（就是最后一个）的 Y 自由度添加了一个 1 单位的力，并将第一列的单元的位移全部约束
+
+### 循环迭代
+
+最后，我们首先将优化变量初始化，平均分配体积，随后不断迭代直到优化变量不在大幅度变化，我们即认为已经达到了极值，输出结果
+
+```python
+while change > 0.01 and loop < 3000:
+    loop += 1
+	
+	# 组装全局刚度矩阵
+    K = assemble_global_stiffness(x, penal, ke, iK, jK, ndof)
+    
+    # 有限元分析
+    U = solve_equilibrium(K, force_vector, fixed_dofs)
+        
+    # 计算灵敏度
+    obj, dc = calculate_sensitivity(x, U, ke, penal, edofMat)
+        
+    # 过滤灵敏度
+    dc = check_sensitivity_filter(x, dc, H, Hs)
+        
+    # OC 方法更新设计变量
+    x_new = optimality_criteria_update(x, dc, volfrac)
+        
+    # 计算改变量
+    change = np.max(np.abs(x_new - x))
+    x = x_new
+        
+    current_vol = np.mean(x)
+    if loop % 100 == 0 or loop == 1:
+	    print(f"It.: {loop:4d}, Obj.: {obj:10.4f}, Vol.: {current_vol:6.4f}, ch.: {change:6.4f}")
+
+```
+
+## 总结
+
+拓扑优化的所有知识，其实我们在本科的课程中就已经学过，但是本科的很多课程并不会告诉你这些知识有什么用，如果想对有限元分析，材料力学，线性代数等课程的知识有更加深刻的理解，我真心推荐大家自己复现一遍 O. Sigmund 教授的著名论文《A 99 line topology optimization code written in Matlab》，相信你会受益良多！
